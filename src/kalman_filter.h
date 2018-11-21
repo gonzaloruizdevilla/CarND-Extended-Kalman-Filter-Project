@@ -1,6 +1,7 @@
 #ifndef KALMAN_FILTER_H_
 #define KALMAN_FILTER_H_
 #include "Eigen/Dense"
+#include "tools.h"
 
 class KalmanFilter {
 public:
@@ -64,6 +65,11 @@ public:
    */
   void UpdateEKF(const Eigen::VectorXd &z);
 
+private:
+  // tool object used to compute Jacobian
+  Tools tools;
+
+  void UpdateWith_y(const Eigen::VectorXd &y);
 };
 
 #endif /* KALMAN_FILTER_H_ */

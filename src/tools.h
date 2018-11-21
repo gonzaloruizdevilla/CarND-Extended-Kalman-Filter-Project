@@ -29,6 +29,16 @@ public:
   */
   MatrixXd CalculateJacobian(const VectorXd& x_state);
 
+  /** 
+   * A helper method to calculate Polar coordinates from Cartesian coordinates
+   */
+  VectorXd ToPolar(const VectorXd &x);
+
+  /** 
+   * A helper method to calculate Cartesian coordinates from Polar coordinates 
+   */
+  VectorXd ToCartesian(const VectorXd &x);
+
 };
 
 #endif /* TOOLS_H_ */

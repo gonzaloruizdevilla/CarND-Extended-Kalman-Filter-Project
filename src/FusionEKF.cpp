@@ -36,8 +36,24 @@ FusionEKF::FusionEKF() {
     * Finish initializing the FusionEKF.
     * Set the process and measurement noises
   */
+  // State transition matrix update
+  ekf_.F_ = MatrixXd(4, 4);
+  ekf_.F_ << 1, 0, 0, 0,
+      0, 1, 0, 0,
+      0, 0, 1, 0,
+      0, 0, 0, 1;
 
+  //measurement matrix
+  H_laser_ << 1, 0, 0, 0,
+              0, 1, 0, 0;
+  ekf_.H_ = H_laser_;
 
+  // p matrix
+  ekf_.P_ = MatrixXd(4, 4);
+  ekf_.P_ << 1, 0, 0, 0,
+      0, 1, 0, 0,
+      0, 0, 1000, 0,
+      0, 0, 0, 1000;
 }
 
 /**
@@ -90,9 +106,35 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
      * Update the process noise covariance matrix.
      * Use noise_ax = 9 and noise_ay = 9 for your Q matrix.
    */
+  float noise_ax = 9.;
+  float noise_ay = 9.;
+  float dt = (measurement_pack.timestamp_ - previous_timestamp_) / 1000000.;
+  // State transition matrix update
+  
+  if (dt > 0) {
+    // Update the motion model matrix for a timestep dt.
+    // We use a motion model with a constant velocity.
+    ekf_.F_(0, 2) = dt;
+    ekf_.F_(1, 3) = dt;
 
-  ekf_.Predict();
+    //set the process covariance matrix Q
+    float dt2 = dt * dt;
+    float dt3 = dt2 * dt;
+    float dt4 = dt3 * dt;
+    float dt4_4 = dt4 / 4;
+    float dt3_2 = dt3 / 2;
+    ekf_.Q_ = MatrixXd(4, 4);
+    ekf_.Q_ <<  dt4_4 * noise_ax, 0,                dt3_2 * noise_ax, 0,
+                0,                dt4_4 * noise_ay, 0,                dt3_2 * noise_ay,
+                dt3_2 * noise_ax, 0,                dt2 * noise_ax,   0,
+                0,                dt3_2 * noise_ay, 0,                dt2 * noise_ay;
 
+    //Predict next state
+    ekf_.Predict();
+    previous_timestamp_ = measurement_pack.timestamp_;
+    cout << "Pred end!" << endl;
+  }
+  
   /*****************************************************************************
    *  Update
    ****************************************************************************/
@@ -105,10 +147,18 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
 
   if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
     // Radar updates
+    
+    ekf_.H_ = tools.CalculateJacobian(ekf_.x_);
+    ekf_.R_ = R_radar_;
+    ekf_.UpdateEKF(measurement_pack.raw_measurements_);
   } else {
     // Laser updates
+    
+    ekf_.H_ = H_laser_;
+    ekf_.R_ = R_laser_;
+    ekf_.Update(measurement_pack.raw_measurements_);
   }
-
+  
   // print the output
   cout << "x_ = " << ekf_.x_ << endl;
   cout << "P_ = " << ekf_.P_ << endl;

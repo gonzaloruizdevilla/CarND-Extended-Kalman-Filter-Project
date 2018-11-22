@@ -19,7 +19,7 @@ VectorXd Tools::CalculateRMSE(const vector<VectorXd> &estimations,
   //  * the estimation vector size should not be zero
   //  * the estimation vector size should equal ground truth vector size
   if (estimations.size() != ground_truth.size() || estimations.size() == 0) {
-    cout << "Invalid estimation or ground_truth data" << endl;
+    cout << "Invalid estimation or ground_truth data." << endl;
     return rmse;
   }
 
@@ -53,7 +53,7 @@ MatrixXd Tools::CalculateJacobian(const VectorXd& x_state) {
   //check division by zero
   if (px == 0 && py == 0) {
 
-    cout << "Error: position x and y with 0 value";
+    cout << "Error: positions x and y with 0 value. Unable to calculate Jacobian.";
 
   } else {
 
@@ -98,9 +98,9 @@ VectorXd Tools::ToPolar(const VectorXd &x)
 
 VectorXd Tools::ToCartesian(const VectorXd &polar_x){
   VectorXd x(4);
-  float rho = x[0];
-  float theta = x[1];
-  float rho_dot = x[2];
+  float rho = polar_x[0];
+  float theta = polar_x[1];
+  float rho_dot = polar_x[2];
   x << rho * cos(theta),
       rho * sin(theta),
       rho_dot * cos(theta),
